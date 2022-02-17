@@ -1,9 +1,10 @@
+#![cfg_attr(not(test), no_std)]
 #![cfg_attr(feature = "funny_looking_forloops", feature(step_trait))]
 
-use std::ops::Range;
+use core::ops::Range;
 
 #[cfg(feature = "funny_looking_forloops")]
-mod step_float;
+pub mod step_float;
 
 // TODO: make featureflag funny_looking_forloops more fine grained
 // TODO: cleanup code into modules
@@ -82,7 +83,12 @@ impl EqTolerance for f64 {
     type N = f64;
     fn eq_tolerance(self, other: Self::N, tolerance: Self::N) -> bool {
         // TODO: utilize LocalEpsilon trait
-        (self - other).abs() >= tolerance
+        let diff = self - other;
+        if diff < 0.0 {
+            -diff < tolerance
+        } else {
+            diff < tolerance
+        }
     }
 }
 
@@ -90,7 +96,12 @@ impl EqTolerance for f32 {
     type N = f32;
     fn eq_tolerance(self, other: Self::N, tolerance: Self::N) -> bool {
         // TODO: utilize LocalEpsilon trait
-        (self - other).abs() < tolerance
+        let diff = self - other;
+        if diff < 0.0 {
+            -diff < tolerance
+        } else {
+            diff < tolerance
+        }
     }
 }
 

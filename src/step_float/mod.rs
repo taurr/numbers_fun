@@ -1,7 +1,7 @@
 pub use bit_pattern::StepFloat;
-pub use std::iter::Step;
+pub use core::iter::Step;
 
-mod bit_pattern;
+pub mod bit_pattern;
 
 impl Step for StepFloat {
     fn steps_between(start: &Self, end: &Self) -> Option<usize> {

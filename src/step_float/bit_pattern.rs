@@ -1,4 +1,4 @@
-use std::ops::Deref;
+use core::ops::Deref;
 
 #[derive(Copy, Clone, Debug, Default, PartialEq, PartialOrd)]
 pub struct StepFloat(f32);
