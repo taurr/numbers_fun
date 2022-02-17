@@ -1,4 +1,8 @@
+#![feature(step_trait)]
+
 use std::ops::Range;
+
+mod step_float;
 
 pub trait Step<T> {
     type I: IntoIterator<Item = T>;
