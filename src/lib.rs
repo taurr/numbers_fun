@@ -1,8 +1,15 @@
-#![feature(step_trait)]
+#![cfg_attr(feature="funny_looking_forloops", feature(step_trait))]
 
 use std::ops::Range;
 
+#[cfg(feature="funny_looking_forloops")]
 mod step_float;
+
+pub trait IntoFloatIter<T> {
+    type I: IntoIterator<Item = T>;
+
+    fn float_iter(self) -> Self::I;
+}
 
 pub trait Step<T> {
     type I: IntoIterator<Item = T>;
@@ -93,12 +100,14 @@ mod tests {
     #[test]
     fn it_works() {
         let steps = (0f32..1f32).step(0.1).collect::<Vec<f32>>();
-        const EPSILON: f32 = 0.00000006;
         for (a, b) in [0f32, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
             .into_iter()
             .zip(steps)
         {
-            assert!(a.eq_tolerance(b, EPSILON));
+            assert!(a.eq_tolerance(b, f32::EPSILON));
         }
+
+        let _ = (0i32..100).step(10).collect::<Vec<i32>>();
+        let _ = (0i32..100).into_iter().skip(10).collect::<Vec<i32>>();
     }
 }

@@ -5,3 +5,8 @@ edition = "2021"
 
 [dev-dependencies]
 proptest = "1.0.0"
+
+
+[features]
+default = []
+funny_looking_forloops = []
