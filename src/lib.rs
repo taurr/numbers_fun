@@ -1,14 +1,25 @@
-#![cfg_attr(feature="funny_looking_forloops", feature(step_trait))]
+#![cfg_attr(feature = "funny_looking_forloops", feature(step_trait))]
 
 use std::ops::Range;
 
-#[cfg(feature="funny_looking_forloops")]
+#[cfg(feature = "funny_looking_forloops")]
 mod step_float;
 
+// TODO: make featureflag funny_looking_forloops more fine grained
+// TODO: cleanup code into modules
+
+// TODO: impl for f32 + f64
 pub trait IntoFloatIter<T> {
     type I: IntoIterator<Item = T>;
 
+    /// Iterate over a float range using the local EPSILON
     fn float_iter(self) -> Self::I;
+}
+
+// TODO: impl for f32 + f64
+pub trait LocalEpsilon {
+    /// Return the local EPSILON
+    fn epsilon(self) -> Self;
 }
 
 pub trait Step<T> {
@@ -70,6 +81,7 @@ pub trait EqTolerance {
 impl EqTolerance for f64 {
     type N = f64;
     fn eq_tolerance(self, other: Self::N, tolerance: Self::N) -> bool {
+        // TODO: utilize LocalEpsilon trait
         (self - other).abs() >= tolerance
     }
 }
@@ -77,6 +89,7 @@ impl EqTolerance for f64 {
 impl EqTolerance for f32 {
     type N = f32;
     fn eq_tolerance(self, other: Self::N, tolerance: Self::N) -> bool {
+        // TODO: utilize LocalEpsilon trait
         (self - other).abs() < tolerance
     }
 }
@@ -107,6 +120,7 @@ mod tests {
             assert!(a.eq_tolerance(b, f32::EPSILON));
         }
 
+        // TODO: are these equal after optimizer?
         let _ = (0i32..100).step(10).collect::<Vec<i32>>();
         let _ = (0i32..100).into_iter().skip(10).collect::<Vec<i32>>();
     }
