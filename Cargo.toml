@@ -10,3 +10,6 @@ proptest = "1.0.0"
 [features]
 default = []
 funny_looking_forloops = []
+
+[dependencies]
+simple_bitfield = "0.1.8"

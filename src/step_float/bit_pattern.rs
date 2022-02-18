@@ -1,4 +1,13 @@
 use core::ops::Deref;
+use simple_bitfield::{bitfield, Field};
+
+bitfield! {
+    struct Float<u32> {
+        mantissa: 23,
+        exponent: 8,
+        sign: 1
+    }
+}
 
 #[derive(Copy, Clone, Debug, Default, PartialEq, PartialOrd)]
 pub struct StepFloat(f32);
@@ -17,45 +26,29 @@ impl StepFloat {
     }
 
     pub fn increment(self) -> Self {
-        let value = self.0.to_bits();
-        let mantissa = value & 0b0_00000000_11111111111111111111111;
-        let incr = if mantissa == 0b0_00000000_11111111111111111111111 {
-            let mut exponent = value & 0b0_11111111_00000000000000000000000;
-            exponent >>= 23;
-            exponent += 1;
-            exponent <<= 23;
-            let mut value = value & 0b1_00000000_11111111111111111111111;
-            value |= exponent;
-            // reset mantissa
-            value & 0b1_11111111_00000000000000000000000
+        let mut value = Float::new(self.to_bits());
+        let mantissa = value.mantissa.get();
+        let exponent = value.exponent.get();
+        if mantissa == 0b11111111111111111111111 {
+            value.exponent.set(exponent + 1);
+            value.mantissa.set(0);
         } else {
-            let mut mantissa = value & 0b0_00000000_11111111111111111111111;
-            mantissa += 1;
-            let value = value & 0b1_11111111_00000000000000000000000;
-            value | mantissa
+            value.mantissa.set(mantissa + 1);
         };
-        Self(f32::from_bits(incr))
+        Self(f32::from_bits(u32::from(value)))
     }
 
     pub fn decrement(self) -> Self {
-        let value = self.0.to_bits();
-        let mantissa = value & 0b0_00000000_11111111111111111111111;
-        let decr = if mantissa == 0b0_00000000_00000000000000000000000 {
-            let mut exponent = value & 0b0_11111111_00000000000000000000000;
-            exponent >>= 23;
-            exponent -= 1;
-            exponent <<= 23;
-            let value = value & 0b1_00000000_11111111111111111111111;
-            let value = value | exponent;
-            // set mantissa
-            value | 0b0_00000000_11111111111111111111111
+        let mut value = Float::new(self.to_bits());
+        let mantissa = value.mantissa.get();
+        let exponent = value.exponent.get();
+        if mantissa == 0 {
+            value.exponent.set(exponent - 1);
+            value.mantissa.set(0b11111111111111111111111);
         } else {
-            let mut mantissa = value & 0b0_00000000_11111111111111111111111;
-            mantissa -= 1;
-            let value = value & 0b1_11111111_00000000000000000000000;
-            value | mantissa
+            value.mantissa.set(mantissa - 1);
         };
-        Self(f32::from_bits(decr))
+        Self(f32::from_bits(u32::from(value)))
     }
 }
 
@@ -68,20 +61,20 @@ mod test {
     fn increments_zero() {
         let sf = StepFloat::new(0.0);
         let sf = sf.increment();
-        let value = unsafe { std::mem::transmute::<f32, u32>(sf.0) };
+        let value = sf.0.to_bits();
         assert_eq!(1, value);
         let sf = sf.increment();
-        let value = unsafe { std::mem::transmute::<f32, u32>(sf.0) };
+        let value = sf.0.to_bits();
         assert_eq!(2, value);
     }
 
     #[test]
     fn increments_one() {
         let sf = StepFloat::new(1.0);
-        let one = unsafe { std::mem::transmute::<f32, u32>(sf.0) };
+        let one = sf.0.to_bits();
         assert_eq!(one, 0b00111111_10000000_00000000_00000000);
         let sf = sf.increment();
-        let value = unsafe { std::mem::transmute::<f32, u32>(sf.0) };
+        let value = sf.0.to_bits();
         assert_eq!(value, one + 1);
     }
 
@@ -96,7 +89,7 @@ mod test {
     #[test]
     fn test_incr_decr_boundary() {
         let pattern: u32 = 0b0_00001111_11111111111111111111111;
-        let initial = StepFloat::new(unsafe { std::mem::transmute(pattern) });
+        let initial = StepFloat::new(f32::from_bits(pattern));
         let original = initial.clone().increment().decrement();
         assert_eq!(initial, original);
     }
